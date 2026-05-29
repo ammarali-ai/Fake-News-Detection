@@ -1,0 +1,32 @@
+# Multilingual Fake News Detector — docker-compose.yml
+version: "3.9"
+
+services:
+  gradio-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fake-news-gradio
+    command: ["python", "app.py"]
+    ports:
+      - "7860:7860"
+    volumes:
+      - ./saved_model:/app/saved_model
+      - models:/models
+    restart: unless-stopped
+
+  fastapi-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fake-news-api
+    command: ["python", "-m", "uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8000"]
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./saved_model:/app/saved_model
+      - models:/models
+    restart: unless-stopped
+
+volumes:
+  models:

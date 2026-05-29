@@ -1,0 +1,25 @@
+# Multilingual Fake News Detector — .gitignore
+
+# Python bytecode and caches
+__pycache__/
+*.pyc
+
+# Local environment files
+.env
+*.env
+
+# Build artifacts
+*.egg-info/
+dist/
+build/
+
+# OS junk
+.DS_Store
+
+# Logs
+*.log
+
+# saved_model is intentionally tracked for HuggingFace Spaces deployment.
+# Do NOT add saved_model/ to this file — Spaces needs the SavedModel committed.
+!saved_model/
+!saved_model/**
