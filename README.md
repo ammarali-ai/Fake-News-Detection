@@ -25,15 +25,22 @@ A production-ready fake news classifier that labels text as **Real** or **Fake**
 
 ```
 .
-├── app.py                  # Gradio UI (HuggingFace Spaces entry point)
-├── api.py                  # FastAPI REST backend
-├── model_loader.py         # Shared model + tokenizer loader (load-once)
-├── evaluate.py             # Offline evaluation CLI
-├── requirements.txt        # Pinned Python dependencies
-├── Dockerfile              # Container image for app + API
-├── docker-compose.yml      # Two-service stack (Gradio + FastAPI)
+├── app.py                       # Gradio UI (HuggingFace Spaces entry point)
+├── api.py                       # FastAPI REST backend
+├── model_loader.py              # Shared model + tokenizer loader (load-once)
+├── evaluate.py                  # Offline evaluation CLI
+├── requirements.txt             # Pinned Python dependencies
+├── Dockerfile                   # Container image for app + API
+├── docker-compose.yml           # Two-service stack (Gradio + FastAPI)
+├── .dockerignore
 ├── .gitignore
-├── saved_model/            # TensorFlow SavedModel (tracked for HF Spaces)
+├── .env.example                 # Documents HF_MODEL_REPO_ID
+├── deploy.ps1 / deploy.sh       # Push current branch to a HuggingFace Space
+├── tests/test_model_loader.py   # Error-path unit tests (skip if TF missing)
+├── data/sample_test.csv         # 6-row demo dataset for evaluate.py
+├── .github/workflows/ci.yml     # GitHub Actions: syntax + lightweight tests
+├── LICENSE                      # MIT
+├── saved_model/                 # TensorFlow SavedModel (tracked for HF Spaces)
 └── README.md
 ```
 
@@ -94,13 +101,22 @@ docker-compose up --build
 
 ## Run evaluation
 
-The evaluation script takes a CSV with columns `text`, `language`, `label` (0 = Real, 1 = Fake).
+The evaluation script takes a CSV with columns `text`, `language`, `label` (0 = Real, 1 = Fake). A 6-row demo dataset ships at [`data/sample_test.csv`](data/sample_test.csv):
 
 ```bash
-python evaluate.py --csv data/test.csv
+python evaluate.py --csv data/sample_test.csv
 ```
 
 It prints overall metrics (accuracy, precision, recall, F1), a per-language breakdown, and a confusion matrix, and writes `evaluation_results.json`.
+
+## Run tests
+
+```bash
+pip install pytest
+pytest -q tests/
+```
+
+Tests use `pytest.importorskip` to skip gracefully if the heavy ML stack isn't installed locally, so the suite is safe to run on any contributor machine. CI runs the same `pytest -q tests/` invocation on every push.
 
 ## API documentation
 
@@ -189,6 +205,26 @@ chmod +x deploy.sh
 ```
 
 The script prints the live Space URL on success.
+
+## Documentation
+
+Deep-dive docs live in [`docs/`](docs/):
+
+| Doc | What it covers |
+|---|---|
+| [Architecture](docs/ARCHITECTURE.md) | System diagram, components, request flow, design decisions |
+| [Model card](docs/MODEL_CARD.md) | Base model, training data, metrics, limitations, ethics |
+| [Requirements](docs/REQUIREMENTS.md) | Functional + non-functional requirements |
+| [API reference](docs/API.md) | Full endpoint catalog with examples in curl / Python / JS |
+| [Deployment](docs/DEPLOYMENT.md) | HF Spaces, Docker, cloud deployment paths |
+| [Development](docs/DEVELOPMENT.md) | Local setup, running tests, code style |
+| [Skills](docs/SKILLS.md) | Technical skills demonstrated in this project |
+| [Contributing](CONTRIBUTING.md) | How to file issues and open PRs |
+| [Changelog](CHANGELOG.md) | Release history |
+
+## License
+
+Released under the [MIT License](LICENSE). Free for commercial and personal use; please retain the copyright notice.
 
 ## Tech stack
 
