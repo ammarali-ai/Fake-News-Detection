@@ -62,8 +62,15 @@ The script:
 4. Prints the live Space URL.
 
 ### Model source on Spaces
-- **Option A (simplest):** commit `saved_model/` directly in the repo. The `.gitignore` is configured to track it. Note that Spaces have a 50 GB limit on the repo, and Git LFS is recommended for files over 10 MB.
-- **Option B:** set `HF_MODEL_REPO_ID` as a Space secret (Settings → Variables and secrets). The Hub fallback in `model_loader.py` picks it up at startup.
+The model lives in the **private** HF Hub repo [`ammarali-ai/Fake-News-Detection`](https://huggingface.co/ammarali-ai/Fake-News-Detection), so the recommended setup is:
+
+1. **Set Space secrets** at *Settings → Variables and secrets → New secret*:
+   - `HF_MODEL_REPO_ID` = `ammarali-ai/Fake-News-Detection` (or omit; the project defaults to this)
+   - `HF_TOKEN` = a read-scoped token from <https://huggingface.co/settings/tokens> with access to the gated model repo
+
+2. **Don't commit `saved_model/` to the Space.** The Space will pull it via `model_loader._download_from_hub()` on first boot. (If you do commit it, Spaces enforces a 50 GB repo limit and Git LFS is recommended for files over 10 MB.)
+
+Alternative if you want zero runtime download: copy the SavedModel files into `./saved_model/` and commit them to the **Space repo** (not the GitHub repo) so the model boots from disk. Most projects prefer the secret-based fetch — keeps the Space repo small.
 
 ### Failure modes
 | Symptom | Fix |
@@ -144,8 +151,8 @@ The Dockerfile is platform-agnostic, so any container runtime works. Specifics d
 
 | Variable | Required? | What it does |
 |---|---|---|
-| `HF_MODEL_REPO_ID` | Required if `./saved_model/` is empty | HuggingFace Hub repo id (`<owner>/<repo>`) to download the SavedModel from on first run. |
-| `HF_TOKEN` | Required if your model repo is private/gated | Standard HuggingFace token; `huggingface_hub` picks it up automatically. |
+| `HF_MODEL_REPO_ID` | Optional; defaults to `ammarali-ai/Fake-News-Detection` | HuggingFace Hub repo id (`<owner>/<repo>`) to download the SavedModel from on first run. |
+| `HF_TOKEN` | **Required** — the default model repo is private/gated | Read-scoped HuggingFace token. `huggingface_hub` picks it up automatically. Create at <https://huggingface.co/settings/tokens>. |
 
 See [`.env.example`](../.env.example) for the documented schema.
 

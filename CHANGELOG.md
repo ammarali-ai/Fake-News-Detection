@@ -8,7 +8,7 @@ All notable changes to this project are documented here. Follows [Keep a Changel
 - Comprehensive `docs/` folder: architecture, model card, requirements, API reference, deployment guide, development guide, skills.
 - `CONTRIBUTING.md` and `CHANGELOG.md`.
 - `LICENSE` (MIT).
-- `.env.example` documenting `HF_MODEL_REPO_ID` and optional `HF_TOKEN`.
+- `.env.example` documenting `HF_MODEL_REPO_ID` and `HF_TOKEN`.
 - `tests/test_model_loader.py` covering error paths, constants, and the SavedModel detector. Guarded with `pytest.importorskip` so it runs without the heavy ML stack.
 - `data/sample_test.csv` — 6-row demo dataset (2 per language) for `evaluate.py`.
 - `.github/workflows/ci.yml` — syntax checks (`py_compile`, `bash -n`, PowerShell tokenizer) + `pytest` on every push and PR.
@@ -16,6 +16,7 @@ All notable changes to this project are documented here. Follows [Keep a Changel
 ### Changed
 - Top-level `README.md` updated with new project-structure tree, a documentation index pointing to `docs/`, a test-running section, and a license note.
 - `deploy.sh` marked executable in the git index (mode `100755`).
+- Wired the concrete HuggingFace Hub model repo `ammarali-ai/Fake-News-Detection` (private/gated) into `.env.example` and `docker-compose.yml` as the default `HF_MODEL_REPO_ID`. Documented `HF_TOKEN` as required (instead of optional) in README, `docs/DEPLOYMENT.md`, and `docs/MODEL_CARD.md`. Added a "Getting the model" section in the model card with both runtime-fetch and local-checkout instructions.
 
 ## [0.2.0] — 2026-05-29
 

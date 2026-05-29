@@ -19,6 +19,21 @@ A model card is the standard way to document an ML system's behaviour, limitatio
 | **Framework** | TensorFlow 2.13, Transformers 4.35 |
 | **Author** | Ammar Ali ([@ammarali-ai](https://github.com/ammarali-ai)) |
 | **License** | MIT |
+| **Model repo** | [`ammarali-ai/Fake-News-Detection`](https://huggingface.co/ammarali-ai/Fake-News-Detection) on HuggingFace Hub (**private/gated** — request access) |
+
+### Getting the model
+
+The SavedModel ships from the private HF Hub repo above. Two ways to use it:
+
+1. **Runtime fetch (recommended).** Set the env vars and let `model_loader._download_from_hub()` pull it on first boot:
+   ```bash
+   export HF_MODEL_REPO_ID="ammarali-ai/Fake-News-Detection"
+   export HF_TOKEN="hf_xxx..."  # read-scoped token with access to the gated repo
+   ```
+2. **Local checkout.** Once granted access, clone the model repo and place the files in `./saved_model/`:
+   ```bash
+   huggingface-cli download ammarali-ai/Fake-News-Detection --local-dir ./saved_model
+   ```
 
 ## Intended use
 

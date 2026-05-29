@@ -11,9 +11,10 @@ services:
     ports:
       - "7860:7860"
     environment:
-      # Optional: set to "<owner>/<repo>" to fetch the SavedModel from the
-      # HuggingFace Hub at startup when ./saved_model/ is empty.
-      HF_MODEL_REPO_ID: "${HF_MODEL_REPO_ID:-}"
+      # Defaults to the private project model repo. Override via .env or shell.
+      HF_MODEL_REPO_ID: "${HF_MODEL_REPO_ID:-ammarali-ai/Fake-News-Detection}"
+      # REQUIRED — the model repo is private/gated.
+      HF_TOKEN: "${HF_TOKEN:-}"
     volumes:
       - ./saved_model:/app/saved_model
     restart: unless-stopped
@@ -27,7 +28,8 @@ services:
     ports:
       - "8000:8000"
     environment:
-      HF_MODEL_REPO_ID: "${HF_MODEL_REPO_ID:-}"
+      HF_MODEL_REPO_ID: "${HF_MODEL_REPO_ID:-ammarali-ai/Fake-News-Detection}"
+      HF_TOKEN: "${HF_TOKEN:-}"
     volumes:
       - ./saved_model:/app/saved_model
     restart: unless-stopped

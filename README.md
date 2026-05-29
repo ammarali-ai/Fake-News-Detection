@@ -46,19 +46,25 @@ A production-ready fake news classifier that labels text as **Real** or **Fake**
 
 ## Model source
 
-`model_loader.py` resolves the SavedModel in this order:
+The SavedModel lives in a **private** HuggingFace Hub repo: [`ammarali-ai/Fake-News-Detection`](https://huggingface.co/ammarali-ai/Fake-News-Detection). `model_loader.py` resolves it in this order:
 
 1. **Local** — if `./saved_model/` already contains a `saved_model.pb`, it's loaded directly.
-2. **HuggingFace Hub fallback** — if the folder is empty/missing **and** the `HF_MODEL_REPO_ID` env var is set, the model is fetched via `huggingface_hub.snapshot_download()` into `./saved_model/` on first run.
-3. Otherwise startup raises `RuntimeError` with a message telling you which of the two options to set.
+2. **HuggingFace Hub fallback** — if the folder is empty, `huggingface_hub.snapshot_download()` pulls from `HF_MODEL_REPO_ID` (default `ammarali-ai/Fake-News-Detection`) into `./saved_model/` on first run.
+3. Otherwise startup raises `RuntimeError`.
+
+Because the repo is **private**, an HF token with read access is required:
 
 ```bash
-# Option A: commit the model alongside the code (best for HF Spaces)
-cp -r /path/to/your/saved_model ./saved_model
+# Linux / macOS
+export HF_MODEL_REPO_ID="ammarali-ai/Fake-News-Detection"
+export HF_TOKEN="hf_xxx..."
 
-# Option B: fetch from the Hub at runtime
-export HF_MODEL_REPO_ID="your-username/your-model-repo"   # PowerShell: $env:HF_MODEL_REPO_ID = "..."
+# Windows PowerShell
+$env:HF_MODEL_REPO_ID = "ammarali-ai/Fake-News-Detection"
+$env:HF_TOKEN = "hf_xxx..."
 ```
+
+Get the token from <https://huggingface.co/settings/tokens>. On HuggingFace Spaces, set both as Space secrets (Settings → Variables and secrets) instead of `.env` entries. See [`.env.example`](.env.example).
 
 ## Run locally
 
