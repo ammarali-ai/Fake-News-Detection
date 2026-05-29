@@ -37,6 +37,22 @@ A production-ready fake news classifier that labels text as **Real** or **Fake**
 └── README.md
 ```
 
+## Model source
+
+`model_loader.py` resolves the SavedModel in this order:
+
+1. **Local** — if `./saved_model/` already contains a `saved_model.pb`, it's loaded directly.
+2. **HuggingFace Hub fallback** — if the folder is empty/missing **and** the `HF_MODEL_REPO_ID` env var is set, the model is fetched via `huggingface_hub.snapshot_download()` into `./saved_model/` on first run.
+3. Otherwise startup raises `RuntimeError` with a message telling you which of the two options to set.
+
+```bash
+# Option A: commit the model alongside the code (best for HF Spaces)
+cp -r /path/to/your/saved_model ./saved_model
+
+# Option B: fetch from the Hub at runtime
+export HF_MODEL_REPO_ID="your-username/your-model-repo"   # PowerShell: $env:HF_MODEL_REPO_ID = "..."
+```
+
 ## Run locally
 
 ### Gradio app
@@ -152,6 +168,27 @@ Health check.
 ```
 
 Validation errors return HTTP `422`; inference errors return HTTP `500` with a descriptive message.
+
+## Deploy to HuggingFace Spaces
+
+1. Create a new Space at <https://huggingface.co/new-space> with SDK = Gradio.
+2. `pip install huggingface_hub && huggingface-cli login`.
+3. Run the deploy script for your platform — it wires up the `hf` git remote and pushes the current branch to the Space's `main`:
+
+```powershell
+# Windows
+.\deploy.ps1 -SpaceOwner <your-hf-username>
+# Optional: -SpaceName custom-name, -Force for first push to a non-empty Space
+```
+
+```bash
+# Linux / macOS
+chmod +x deploy.sh
+./deploy.sh <your-hf-username>
+# Optional: ./deploy.sh <owner> <space-name> --force
+```
+
+The script prints the live Space URL on success.
 
 ## Tech stack
 

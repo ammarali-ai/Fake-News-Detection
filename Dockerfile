@@ -7,11 +7,10 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy project source.
+# Copy project source (includes saved_model/ when committed locally).
+# If saved_model/ is empty, model_loader.py falls back to downloading from
+# the HuggingFace Hub using the HF_MODEL_REPO_ID env var at startup.
 COPY . .
-
-# Copy the TensorFlow SavedModel folder (kept as a separate COPY for clarity).
-COPY saved_model/ ./saved_model/
 
 # Gradio (7860) and FastAPI (8000).
 EXPOSE 7860

@@ -1,5 +1,6 @@
 tensorflow==2.13.0
 transformers==4.35.0
+huggingface_hub==0.19.4
 gradio==4.7.1
 numpy==1.24.3
 sentencepiece

@@ -1,0 +1,32 @@
+# Multilingual Fake News Detector — .dockerignore
+.git/
+.gitignore
+.github/
+
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+.venv/
+venv/
+env/
+
+.env
+*.env
+*.log
+
+.DS_Store
+Thumbs.db
+
+dist/
+build/
+*.egg-info/
+
+.vscode/
+.idea/
+
+# Local plan/notes (not needed in the image)
+evaluation_results.json

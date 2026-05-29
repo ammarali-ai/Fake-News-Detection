@@ -10,9 +10,12 @@ services:
     command: ["python", "app.py"]
     ports:
       - "7860:7860"
+    environment:
+      # Optional: set to "<owner>/<repo>" to fetch the SavedModel from the
+      # HuggingFace Hub at startup when ./saved_model/ is empty.
+      HF_MODEL_REPO_ID: "${HF_MODEL_REPO_ID:-}"
     volumes:
       - ./saved_model:/app/saved_model
-      - models:/models
     restart: unless-stopped
 
   fastapi-service:
@@ -23,10 +26,8 @@ services:
     command: ["python", "-m", "uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8000"]
     ports:
       - "8000:8000"
+    environment:
+      HF_MODEL_REPO_ID: "${HF_MODEL_REPO_ID:-}"
     volumes:
       - ./saved_model:/app/saved_model
-      - models:/models
     restart: unless-stopped
-
-volumes:
-  models:

@@ -7,8 +7,10 @@ service import predict() from here so the model is never loaded twice.
 """
 
 import os
+
 import numpy as np
 import tensorflow as tf
+from huggingface_hub import snapshot_download
 from transformers import AutoTokenizer
 
 MODEL_PATH = "./saved_model"
@@ -16,30 +18,69 @@ TOKENIZER_NAME = "bert-base-multilingual-cased"
 LABELS = ["Real", "Fake"]
 SUPPORTED_LANGUAGES = ["English", "Urdu", "Spanish"]
 MAX_LENGTH = 128
+HF_MODEL_REPO_ENV = "HF_MODEL_REPO_ID"
 
 _model = None
 _tokenizer = None
 _serving_fn = None
 
 
+def _has_savedmodel_files(path: str) -> bool:
+    """Return True iff `path` is a directory containing SavedModel artefacts.
+
+    A real TensorFlow SavedModel directory always contains `saved_model.pb`
+    (or its .pbtxt variant), so we use that as the readiness signal.
+    """
+    if not os.path.isdir(path):
+        return False
+    expected = {"saved_model.pb", "saved_model.pbtxt"}
+    return any(name in expected for name in os.listdir(path))
+
+
+def _download_from_hub(repo_id: str) -> None:
+    """Download the SavedModel from a HuggingFace Hub repo into MODEL_PATH.
+
+    Args:
+        repo_id: The "<owner>/<repo>" identifier of the HF Hub model repo.
+    """
+    os.makedirs(MODEL_PATH, exist_ok=True)
+    snapshot_download(repo_id=repo_id, local_dir=MODEL_PATH)
+
+
 def load_model():
     """Load the TensorFlow SavedModel from MODEL_PATH once per process.
+
+    Tries the local `./saved_model/` directory first; if that's empty, falls
+    back to downloading from the HuggingFace Hub using the repo id named by
+    the `HF_MODEL_REPO_ID` env var.
 
     Returns:
         The loaded TensorFlow SavedModel object.
 
     Raises:
-        RuntimeError: If the saved_model folder does not exist.
+        RuntimeError: If neither the local SavedModel nor the env var is set.
     """
     global _model, _serving_fn
     if _model is not None:
         return _model
 
-    if not os.path.isdir(MODEL_PATH):
-        raise RuntimeError(
-            f"SavedModel folder not found at '{MODEL_PATH}'. "
-            "Place the TensorFlow SavedModel files there before starting."
-        )
+    if not _has_savedmodel_files(MODEL_PATH):
+        repo_id = os.environ.get(HF_MODEL_REPO_ENV, "").strip()
+        if not repo_id:
+            raise RuntimeError(
+                f"SavedModel not found at '{MODEL_PATH}' and the "
+                f"{HF_MODEL_REPO_ENV} env var is not set. Either place the "
+                f"TensorFlow SavedModel files in '{MODEL_PATH}' or set "
+                f"{HF_MODEL_REPO_ENV}=<owner>/<repo> to download from the "
+                "HuggingFace Hub."
+            )
+        print(f"Downloading SavedModel from HuggingFace Hub: {repo_id}")
+        _download_from_hub(repo_id)
+        if not _has_savedmodel_files(MODEL_PATH):
+            raise RuntimeError(
+                f"Hub download from '{repo_id}' did not produce a valid "
+                "SavedModel (saved_model.pb missing)."
+            )
 
     _model = tf.saved_model.load(MODEL_PATH)
     _serving_fn = _model.signatures["serving_default"]
