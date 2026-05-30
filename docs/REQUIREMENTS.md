@@ -11,7 +11,7 @@ A clear requirements doc is the contract between what the system *must* do and w
 | ID | Requirement |
 |---|---|
 | FR-1 | The system shall classify a piece of text as `Real` or `Fake`. |
-| FR-2 | The system shall support input in English, Urdu, and Spanish. |
+| FR-2 | The system shall support input in English, Urdu, Spanish, German, Chinese, and Korean. |
 | FR-3 | The system shall return per-class confidence scores summing to 1.0 alongside the predicted label. |
 | FR-4 | The system shall truncate input to 128 BERT tokens; longer inputs are silently truncated. |
 | FR-5 | The system shall reject empty and whitespace-only input with a clear error. |
@@ -93,22 +93,22 @@ A clear requirements doc is the contract between what the system *must* do and w
 |---|---|
 | NFR-16 | The system shall run on Linux, macOS, and Windows hosts via Docker. |
 | NFR-17 | The deploy scripts shall be provided in both Bash (Linux/macOS) and PowerShell (Windows). |
-| NFR-18 | The system shall run on Python 3.10 as the reference version. |
+| NFR-18 | The system shall run on Python 3.11 as the reference version. |
 
 ## System requirements
 
 ### Runtime
 
-- **Python:** 3.10
-- **TensorFlow:** 2.13.0
+- **Python:** 3.11 (TensorFlow has no wheels for 3.14)
+- **TensorFlow:** 2.15.0
 - **Transformers:** 4.35.0
-- **huggingface_hub:** 0.19.4
+- **huggingface_hub:** 0.17.3
 - **Gradio:** 4.7.1
 - **FastAPI:** 0.104.1
 - **Uvicorn:** 0.24.0
 - **Pydantic:** 2.5.0
 - **NumPy:** 1.24.3
-- **scikit-learn, pandas:** for evaluation only
+- **datasets, scikit-learn, pandas, openpyxl:** data prep + evaluation
 
 See [`requirements.txt`](../requirements.txt) for the authoritative list.
 

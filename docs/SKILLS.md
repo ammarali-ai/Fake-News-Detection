@@ -8,8 +8,9 @@ This project doubles as a portfolio artefact. This page makes the technical skil
 
 | Skill | Where it shows up in this repo | Why it matters |
 |---|---|---|
-| Multilingual NLP | Three-language classifier built on `bert-base-multilingual-cased` (English / Urdu / Spanish) | Multilingual modelling is harder than monolingual — tokenizer choice, script handling, and per-language evaluation all have to be deliberate. |
-| Transformer fine-tuning | TensorFlow SavedModel exported from a fine-tuned mBERT checkpoint | Demonstrates the full fine-tune → export → serve loop, not just inference against a frozen pretrained model. |
+| Multilingual NLP | Six-language classifier built on `bert-base-multilingual-cased` (English / Urdu / Spanish / German / Chinese / Korean) | Multilingual modelling is harder than monolingual — tokenizer choice, script handling, and per-language evaluation all have to be deliberate. |
+| Data engineering | [`data_prep.py`](../data_prep.py) downloads, normalizes, and merges heterogeneous per-language sources into one labelled schema | Real ML starts with wrangling messy, inconsistent data into clean, balanced training input. |
+| Transformer fine-tuning | [`train.py`](../train.py) fine-tunes mBERT and exports a TensorFlow SavedModel with a serving signature | Demonstrates the full data → fine-tune → export → serve loop, not just inference against a frozen pretrained model. |
 | Binary text classification | `LABELS = ["Real", "Fake"]`, softmax + argmax in [`model_loader.py:153`](../model_loader.py#L153) | The most common production NLP shape; clean implementation is table stakes. |
 | Per-language evaluation | [`evaluate.py:compute_per_language_metrics`](../evaluate.py) | Reporting only the average accuracy hides language-level regressions. Per-slice metrics are how you catch them. |
 | Responsible AI documentation | [`docs/MODEL_CARD.md`](MODEL_CARD.md) | Intended use, limitations, ethical considerations — required for any model touching real users. |
@@ -40,7 +41,7 @@ This project doubles as a portfolio artefact. This page makes the technical skil
 |---|---|---|
 | RESTful design | [`api.py`](../api.py): `GET /` health, `POST /predict`, `POST /predict/batch` | Conventional, idempotent verbs; predictable for clients. |
 | Documented contracts | [`docs/API.md`](API.md) and FastAPI's auto-generated `/docs` Swagger UI | Clients can integrate without reading source code. |
-| Interactive demo UI | [`app.py`](../app.py) Gradio Blocks layout with examples for all three languages | Lowers the barrier for non-technical evaluators; HF Spaces ready. |
+| Interactive demo UI | [`app.py`](../app.py) Gradio Blocks layout with examples for all six languages | Lowers the barrier for non-technical evaluators; HF Spaces ready. |
 | Batch + single-request APIs | Both `/predict` and `/predict/batch` endpoints | Lets clients amortise HTTP overhead when scoring many texts. |
 
 ## Documentation
@@ -57,19 +58,19 @@ This project doubles as a portfolio artefact. This page makes the technical skil
 
 - **End-to-end ownership** — data → model → API → deploy → docs, no part outsourced or hand-waved.
 - **Production-mindedness** — every choice (Hub fallback, load-once invariant, per-language metrics, CI) was made with "what breaks at 3 AM" in view.
-- **Bilingual / trilingual engineering** — comfortable working across Latin and Arabic scripts in the same codebase, including UI examples.
+- **Cross-script engineering** — comfortable working across Latin, Arabic, Han, and Hangul scripts in the same codebase, including UI examples and hand-authored seed data.
 - **Documentation discipline** — the docs are part of the deliverable, not a follow-up.
 
 ## Tech-stack snapshot
 
 | Layer | Tool / library |
 |---|---|
-| Modelling | TensorFlow 2.13, HuggingFace Transformers 4.35, `bert-base-multilingual-cased` |
+| Modelling | TensorFlow 2.15, HuggingFace Transformers 4.35, `bert-base-multilingual-cased` |
 | Serving | FastAPI 0.104, Uvicorn 0.24, Pydantic 2.5 |
 | UI | Gradio 4.7 (Blocks API) |
-| Distribution | HuggingFace Hub (`huggingface_hub` 0.19) |
+| Distribution | HuggingFace Hub (`huggingface_hub` 0.17) |
 | Evaluation | scikit-learn, pandas |
 | Packaging | Docker, docker-compose |
 | CI | GitHub Actions |
 | Tests | pytest |
-| Languages | Python 3.10, Bash, PowerShell |
+| Languages | Python 3.11, Bash, PowerShell |

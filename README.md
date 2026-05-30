@@ -136,7 +136,7 @@ Health check.
 {
   "status": "ok",
   "model": "multilingual-fake-news-detector",
-  "languages": ["English", "Urdu", "Spanish"]
+  "languages": ["English", "Urdu", "Spanish", "German", "Chinese", "Korean"]
 }
 ```
 
@@ -234,7 +234,7 @@ Released under the [MIT License](LICENSE). Free for commercial and personal use;
 
 ## Tech stack
 
-![TensorFlow](https://img.shields.io/badge/TensorFlow-2.13-FF6F00?logo=tensorflow&logoColor=white)
+![TensorFlow](https://img.shields.io/badge/TensorFlow-2.15-FF6F00?logo=tensorflow&logoColor=white)
 ![HuggingFace](https://img.shields.io/badge/HuggingFace-Transformers%204.35-FFD21E?logo=huggingface&logoColor=black)
 ![Gradio](https://img.shields.io/badge/Gradio-4.7.1-F97316?logo=gradio&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.104-009688?logo=fastapi&logoColor=white)

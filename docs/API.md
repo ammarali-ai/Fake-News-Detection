@@ -2,7 +2,7 @@
 
 ## Why this document matters
 
-The FastAPI service auto-generates Swagger at `/docs` when it's running, but that's only available to whoever has the service up. This page gives client developers a complete contract to integrate against — endpoints, schemas, error shapes, examples in three languages — without booting the service first.
+The FastAPI service auto-generates Swagger at `/docs` when it's running, but that's only available to whoever has the service up. This page gives client developers a complete contract to integrate against — endpoints, schemas, error shapes, examples — without booting the service first.
 
 ## Base URL
 
@@ -26,7 +26,7 @@ Returns service metadata. Use this in load balancer / Kubernetes liveness probes
 {
   "status": "ok",
   "model": "multilingual-fake-news-detector",
-  "languages": ["English", "Urdu", "Spanish"]
+  "languages": ["English", "Urdu", "Spanish", "German", "Chinese", "Korean"]
 }
 ```
 
@@ -55,7 +55,7 @@ Classify one piece of text.
 | Field | Type | Constraints |
 |---|---|---|
 | `text` | string | required, 1 ≤ length ≤ 1000, non-whitespace |
-| `language` | string | required, one of `"English"`, `"Urdu"`, `"Spanish"` |
+| `language` | string | required, one of `"English"`, `"Urdu"`, `"Spanish"`, `"German"`, `"Chinese"`, `"Korean"` |
 
 ```json
 {
@@ -122,7 +122,7 @@ Classify many texts of the same language in one request. Same model logic, diffe
 | Field | Type | Constraints |
 |---|---|---|
 | `texts` | array of strings | required, ≥ 1 item, each non-empty and ≤ 1000 chars |
-| `language` | string | required, one of `"English"`, `"Urdu"`, `"Spanish"` |
+| `language` | string | required, one of `"English"`, `"Urdu"`, `"Spanish"`, `"German"`, `"Chinese"`, `"Korean"` |
 
 ```json
 {

@@ -5,6 +5,17 @@ All notable changes to this project are documented here. Follows [Keep a Changel
 ## [Unreleased]
 
 ### Added
+- **Three more languages** — German, Chinese, Korean (total six: English, Urdu, Spanish,
+  German, Chinese, Korean). `SUPPORTED_LANGUAGES` drives the Gradio dropdown and API validation.
+- **`data_prep.py`** — builds the multilingual corpus: downloads the English/Urdu/Spanish
+  public HuggingFace datasets, merges them with bundled German/Chinese/Korean seed sets
+  (`data/seed/*.csv`), normalizes to `text,language,label` (0=Real,1=Fake), dedupes, and writes
+  a stratified `data/train.csv` / `data/test.csv`.
+- **`train.py`** — fine-tunes `bert-base-multilingual-cased` and exports `./saved_model/` with a
+  serving signature matching `model_loader.predict()` (input_ids + attention_mask → logits).
+- **`notebooks/train_colab.ipynb`** — free-GPU training runner for Colab.
+- **`data/seed/{de,zh,ko}_seed.csv`** — hand-authored balanced seed data for the three new
+  languages (the large research corpora are per-article file dumps, not clean downloads).
 - Comprehensive `docs/` folder: architecture, model card, requirements, API reference, deployment guide, development guide, skills.
 - `CONTRIBUTING.md` and `CHANGELOG.md`.
 - `LICENSE` (MIT).
@@ -14,6 +25,13 @@ All notable changes to this project are documented here. Follows [Keep a Changel
 - `.github/workflows/ci.yml` — syntax checks (`py_compile`, `bash -n`, PowerShell tokenizer) + `pytest` on every push and PR.
 
 ### Changed
+- **Python 3.11 + TensorFlow 2.15** — TF 2.13 has no wheels for Python 3.14 and its
+  `typing-extensions<4.6` cap clashed with gradio/fastapi/pydantic v2; TF 2.15 fixes both and
+  keeps Keras 2 (needed by transformers). `huggingface_hub` → 0.17.3 (tokenizers 0.14
+  compatibility); `sentencepiece` → 0.1.99 (prebuilt 3.11 wheel); added `datasets`, `openpyxl`,
+  `requests`.
+- **Docs truthed-up** — the model is now trained by the user via `train.py` (no committed
+  checkpoint, no private HF repo requirement); removed the unsubstantiated "90% accuracy" claim.
 - Top-level `README.md` updated with new project-structure tree, a documentation index pointing to `docs/`, a test-running section, and a license note.
 - `deploy.sh` marked executable in the git index (mode `100755`).
 - Wired the concrete HuggingFace Hub model repo `ammarali-ai/Fake-News-Detection` (private/gated) into `.env.example` and `docker-compose.yml` as the default `HF_MODEL_REPO_ID`. Documented `HF_TOKEN` as required (instead of optional) in README, `docs/DEPLOYMENT.md`, and `docs/MODEL_CARD.md`. Added a "Getting the model" section in the model card with both runtime-fetch and local-checkout instructions.

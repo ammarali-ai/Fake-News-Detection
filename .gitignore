@@ -4,6 +4,13 @@
 __pycache__/
 *.pyc
 
+# Virtual environment
+.venv/
+venv/
+
+# Editor / harness local dirs
+.claude/
+
 # Local environment files
 .env
 *.env
@@ -19,7 +26,16 @@ build/
 # Logs
 *.log
 
-# saved_model is intentionally tracked for HuggingFace Spaces deployment.
-# Do NOT add saved_model/ to this file — Spaces needs the SavedModel committed.
-!saved_model/
-!saved_model/**
+# Trained model — produced locally by `python train.py`, not committed.
+# (Large; regenerate with train.py, or pull from the HF Hub fallback.)
+saved_model/
+
+# Generated corpus + evaluation output (rebuild with data_prep.py / evaluate.py)
+data/train.csv
+data/test.csv
+evaluation_results.json
+
+# Downloaded raw dataset overrides (scale-up path)
+data/raw/
+
+# NOTE: hand-authored seed data (data/seed/) IS committed — do not ignore it.

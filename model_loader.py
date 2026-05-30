@@ -16,7 +16,14 @@ from transformers import AutoTokenizer
 MODEL_PATH = "./saved_model"
 TOKENIZER_NAME = "bert-base-multilingual-cased"
 LABELS = ["Real", "Fake"]
-SUPPORTED_LANGUAGES = ["English", "Urdu", "Spanish"]
+SUPPORTED_LANGUAGES = [
+    "English",
+    "Urdu",
+    "Spanish",
+    "German",
+    "Chinese",
+    "Korean",
+]
 MAX_LENGTH = 128
 HF_MODEL_REPO_ENV = "HF_MODEL_REPO_ID"
 
@@ -142,9 +149,14 @@ def predict(text: str) -> dict:
             return_tensors="tf",
         )
 
+        # The exported serving signature declares int32 inputs; cast explicitly so
+        # the call never fails on tokenizer dtype differences across versions.
+        input_ids = tf.cast(encoded["input_ids"], tf.int32)
+        attention_mask = tf.cast(encoded["attention_mask"], tf.int32)
+
         outputs = _serving_fn(
-            input_ids=encoded["input_ids"],
-            attention_mask=encoded["attention_mask"],
+            input_ids=input_ids,
+            attention_mask=attention_mask,
         )
 
         logits_key = next(iter(outputs))

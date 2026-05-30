@@ -64,13 +64,24 @@ EXAMPLES = [
         "El gobierno anuncia un nuevo plan económico para impulsar el empleo juvenil.",
         "Spanish",
     ],
+    [
+        "Die Bundesregierung stellt heute ein neues Klimaschutzprogramm vor.",
+        "German",
+    ],
+    [
+        "科学家证实月球内部隐藏着一座外星人建造的城市。",
+        "Chinese",
+    ],
+    [
+        "정부가 오늘 청년 일자리 지원을 위한 새로운 경제 정책을 발표했다.",
+        "Korean",
+    ],
 ]
 
 DESCRIPTION = (
     "Detect whether a news headline or short article is **Real** or **Fake** "
-    "across three languages: English, Urdu, and Spanish.\n\n"
-    "Built on a fine-tuned `bert-base-multilingual-cased` model with **90% "
-    "overall accuracy** on the held-out test set."
+    "across six languages: English, Urdu, Spanish, German, Chinese, and Korean.\n\n"
+    "Built on a fine-tuned `bert-base-multilingual-cased` model."
 )
 
 with gr.Blocks(title="Multilingual Fake News Detector") as demo:
