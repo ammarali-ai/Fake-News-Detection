@@ -25,6 +25,7 @@ build/
 
 # Logs
 *.log
+install_log.txt
 
 # Trained model — produced locally by `python train.py`, not committed.
 # (Large; regenerate with train.py, or pull from the HF Hub fallback.)
