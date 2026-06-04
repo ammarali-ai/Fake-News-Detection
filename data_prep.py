@@ -90,12 +90,40 @@ def _pick_column(columns, candidates):
 # Per-language loaders
 # --------------------------------------------------------------------------- #
 def _load_hf_all_splits(repo_id: str):
-    """Load every split of an HF dataset and return a single pandas frame."""
-    from datasets import load_dataset
+    """Load every split of an HF dataset and return a single pandas frame.
 
-    ds = load_dataset(repo_id)
-    frames = [split.to_pandas() for split in ds.values()]
-    return pd.concat(frames, ignore_index=True)
+    Reads the auto-converted parquet files directly via huggingface_hub instead
+    of `datasets.load_dataset`. This avoids the `datasets` arrow cache, which on
+    Windows builds paths longer than the 260-char MAX_PATH limit and fails with
+    FileNotFoundError on these repos. Falls back to load_dataset if needed.
+    """
+    from huggingface_hub import HfApi, hf_hub_download
+
+    try:
+        api = HfApi()
+        files = api.list_repo_files(
+            repo_id, repo_type="dataset", revision="refs/convert/parquet"
+        )
+        parquets = [f for f in files if f.endswith(".parquet")]
+        if not parquets:
+            raise RuntimeError("no parquet files in convert revision")
+        frames = []
+        for rel in parquets:
+            local = hf_hub_download(
+                repo_id,
+                rel,
+                repo_type="dataset",
+                revision="refs/convert/parquet",
+            )
+            frames.append(pd.read_parquet(local))
+        return pd.concat(frames, ignore_index=True)
+    except Exception as exc:  # noqa: BLE001 - fall back to the datasets loader
+        log(f"  parquet read failed ({exc}); falling back to load_dataset")
+        from datasets import load_dataset
+
+        ds = load_dataset(repo_id)
+        frames = [split.to_pandas() for split in ds.values()]
+        return pd.concat(frames, ignore_index=True)
 
 
 def load_english() -> pd.DataFrame:

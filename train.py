@@ -6,9 +6,13 @@ matches model_loader.predict() exactly: it accepts ``input_ids`` and
 ``attention_mask`` (int32, shape [None, MAX_LEN]) and returns ``{"logits": ...}``.
 
 The same script runs locally (CPU) and on Colab (GPU) — only the flags differ.
+Any HF sequence-classification model whose tokenizer matches
+model_loader.TOKENIZER_NAME and whose signature takes input_ids + attention_mask
+can be selected with --model (the export signature is model-agnostic).
 
-Usage (local CPU smoke test):
-    python train.py --csv data/train.csv --subset 200 --epochs 1
+Usage (low-RAM local CPU smoke test — smaller distilled model):
+    python train.py --csv data/train.csv --model distilbert-base-multilingual-cased \
+        --epochs 1 --batch-size 8
 
 Usage (full / Colab GPU):
     python train.py --csv data/train.csv --epochs 3 --batch-size 16
@@ -21,7 +25,7 @@ import sys
 import numpy as np
 import pandas as pd
 import tensorflow as tf
-from transformers import AutoTokenizer, TFBertForSequenceClassification
+from transformers import AutoTokenizer, TFAutoModelForSequenceClassification
 
 MODEL_NAME = "bert-base-multilingual-cased"
 DEFAULT_OUT = "./saved_model"
@@ -38,6 +42,10 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--csv", default="data/train.csv",
                    help="training CSV with columns text,language,label")
     p.add_argument("--out", default=DEFAULT_OUT, help="SavedModel output directory")
+    p.add_argument("--model", default=MODEL_NAME,
+                   help="HF model id to fine-tune. Default bert-base-multilingual-cased "
+                        "(full quality, ~178M, needs a GPU/lots of RAM). For low-RAM "
+                        "local training try distilbert-base-multilingual-cased.")
     p.add_argument("--epochs", type=int, default=3)
     p.add_argument("--batch-size", type=int, default=8)
     p.add_argument("--max-len", type=int, default=MAX_LEN)
@@ -113,11 +121,17 @@ def main() -> None:
         log("ERROR: training data must contain both classes (real and fake).")
         sys.exit(1)
 
-    log(f"Loading tokenizer + model: {MODEL_NAME}")
-    tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
-    model = TFBertForSequenceClassification.from_pretrained(
-        MODEL_NAME, num_labels=NUM_LABELS
-    )
+    log(f"Loading tokenizer + model: {args.model}")
+    tokenizer = AutoTokenizer.from_pretrained(args.model)
+    try:
+        model = TFAutoModelForSequenceClassification.from_pretrained(
+            args.model, num_labels=NUM_LABELS
+        )
+    except (OSError, EnvironmentError):
+        # Repos that ship only PyTorch weights need explicit from_pt conversion.
+        model = TFAutoModelForSequenceClassification.from_pretrained(
+            args.model, num_labels=NUM_LABELS, from_pt=True
+        )
 
     texts = df["text"].astype(str).tolist()
     labels = df["label"].to_numpy(dtype=np.int32)

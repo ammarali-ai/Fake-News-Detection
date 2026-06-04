@@ -7,7 +7,7 @@ Getting a new contributor productive on day one shouldn't take half a day of tri
 ## Prerequisites
 
 - **Git** ≥ 2.30
-- **Python** 3.10 (reference version — newer should work, but CI runs 3.10)
+- **Python** 3.11 (reference version — TensorFlow has no wheels for 3.14)
 - **Docker** (optional, only for the container workflow)
 - **HuggingFace account** (optional, only for deploy + Hub fallback)
 
@@ -29,7 +29,7 @@ pip install -r requirements.txt
 pip install pytest
 
 # Sanity check
-python -m py_compile model_loader.py app.py api.py evaluate.py
+python -m py_compile model_loader.py app.py api.py evaluate.py data_prep.py train.py
 pytest -q tests/
 ```
 

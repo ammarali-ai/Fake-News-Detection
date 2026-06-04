@@ -16,6 +16,8 @@ python-multipart==0.0.6
 
 # Data prep + evaluation
 datasets==2.14.6
+# datasets 2.14 uses pyarrow.PyExtensionType, removed in pyarrow >= 15; pin to 14.x.
+pyarrow==14.0.2
 pandas==2.0.3
 scikit-learn==1.3.2
 openpyxl==3.1.2

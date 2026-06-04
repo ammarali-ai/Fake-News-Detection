@@ -11,7 +11,7 @@ pinned: false
 
 # Multilingual Fake News Detector
 
-A production-ready fake news classifier that labels text as **Real** or **Fake** across three languages: **English**, **Urdu**, and **Spanish**. Built on a fine-tuned `bert-base-multilingual-cased` model achieving **90% overall accuracy** on the held-out test set.
+A fake news classifier that labels text as **Real** or **Fake** across six languages: **English**, **Urdu**, **Spanish**, **German**, **Chinese**, and **Korean**. Built on a fine-tuned `bert-base-multilingual-cased` model. You train the model yourself from public datasets plus bundled seed data (see [Training](#training)) — there is no pre-trained checkpoint committed to this repo.
 
 ## Supported languages
 
@@ -20,6 +20,9 @@ A production-ready fake news classifier that labels text as **Real** or **Fake**
 | English  | en   | Latin   |
 | Urdu     | ur   | Arabic  |
 | Spanish  | es   | Latin   |
+| German   | de   | Latin   |
+| Chinese  | zh   | Han     |
+| Korean   | ko   | Hangul  |
 
 ## Project structure
 
@@ -28,45 +31,90 @@ A production-ready fake news classifier that labels text as **Real** or **Fake**
 ├── app.py                       # Gradio UI (HuggingFace Spaces entry point)
 ├── api.py                       # FastAPI REST backend
 ├── model_loader.py              # Shared model + tokenizer loader (load-once)
+├── data_prep.py                 # Build the corpus (data/train.csv, data/test.csv)
+├── train.py                     # Fine-tune mBERT and export ./saved_model/
 ├── evaluate.py                  # Offline evaluation CLI
-├── requirements.txt             # Pinned Python dependencies
+├── notebooks/train_colab.ipynb  # Colab (free GPU) training runner
+├── requirements.txt             # Pinned Python dependencies (Python 3.11)
 ├── Dockerfile                   # Container image for app + API
 ├── docker-compose.yml           # Two-service stack (Gradio + FastAPI)
 ├── .dockerignore
 ├── .gitignore
-├── .env.example                 # Documents HF_MODEL_REPO_ID
+├── .env.example                 # Optional HF Hub model fallback config
 ├── deploy.ps1 / deploy.sh       # Push current branch to a HuggingFace Space
 ├── tests/test_model_loader.py   # Error-path unit tests (skip if TF missing)
+├── data/seed/{de,zh,ko}_seed.csv# Hand-authored seed data (German/Chinese/Korean)
 ├── data/sample_test.csv         # 6-row demo dataset for evaluate.py
 ├── .github/workflows/ci.yml     # GitHub Actions: syntax + lightweight tests
 ├── LICENSE                      # MIT
-├── saved_model/                 # TensorFlow SavedModel (tracked for HF Spaces)
+├── saved_model/                 # TensorFlow SavedModel (created by train.py)
 └── README.md
 ```
 
 ## Model source
 
-The SavedModel lives in a **private** HuggingFace Hub repo: [`ammarali-ai/Fake-News-Detection`](https://huggingface.co/ammarali-ai/Fake-News-Detection). `model_loader.py` resolves it in this order:
+There is **no pre-trained checkpoint in this repo** — you create `./saved_model/` by running [Training](#training) (locally or on Colab). `model_loader.py` resolves the model in this order:
 
-1. **Local** — if `./saved_model/` already contains a `saved_model.pb`, it's loaded directly.
-2. **HuggingFace Hub fallback** — if the folder is empty, `huggingface_hub.snapshot_download()` pulls from `HF_MODEL_REPO_ID` (default `ammarali-ai/Fake-News-Detection`) into `./saved_model/` on first run.
-3. Otherwise startup raises `RuntimeError`.
+1. **Local** — if `./saved_model/` contains a `saved_model.pb`, it's loaded directly (the normal path after training).
+2. **HuggingFace Hub fallback** — only if the folder is empty *and* `HF_MODEL_REPO_ID` is set, `huggingface_hub.snapshot_download()` pulls that repo into `./saved_model/` (add `HF_TOKEN` if it's private).
+3. Otherwise startup raises `RuntimeError` with instructions.
 
-Because the repo is **private**, an HF token with read access is required:
+For the standard workflow you don't need any environment variables — just train the model. The optional HF Hub fallback is documented in [`.env.example`](.env.example).
 
-```bash
-# Linux / macOS
-export HF_MODEL_REPO_ID="ammarali-ai/Fake-News-Detection"
-export HF_TOKEN="hf_xxx..."
+## Training
 
+The model is trained from public datasets plus bundled seed data. **Python 3.11 is required** (TensorFlow has no wheels for 3.14). Set up a virtual environment first:
+
+```powershell
 # Windows PowerShell
-$env:HF_MODEL_REPO_ID = "ammarali-ai/Fake-News-Detection"
-$env:HF_TOKEN = "hf_xxx..."
+py -3.11 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
 ```
 
-Get the token from <https://huggingface.co/settings/tokens>. On HuggingFace Spaces, set both as Space secrets (Settings → Variables and secrets) instead of `.env` entries. See [`.env.example`](.env.example).
+### 1. Build the corpus
+
+`data_prep.py` downloads and normalizes the per-language datasets into `data/train.csv` and `data/test.csv` (schema `text, language, label`, where `0 = Real, 1 = Fake`):
+
+| Language | Source |
+|---|---|
+| English | HF `ErfanMoosaviMonazzah/fake-news-detection-dataset-English` |
+| Urdu | HF `community-datasets/urdu_fake_news` |
+| Spanish | HF `mariagrandury/fake_news_corpus_spanish` |
+| German / Chinese / Korean | bundled seed sets in `data/seed/{de,zh,ko}_seed.csv` |
+
+```bash
+python data_prep.py                 # full corpus
+python data_prep.py --subset 200    # cap each language to 200 rows (fast smoke test)
+```
+
+> German/Chinese/Korean ship as small hand-authored **seed** sets because the large research corpora (FANG-COVID, CHECKED, AI-Hub) are distributed as thousands of per-article files rather than clean single-file downloads. To scale a language up, drop extra CSVs with `text,label` columns into `data/raw/<code>/` (e.g. `data/raw/de/`) and they are merged in automatically.
+
+### 2. Fine-tune + export
+
+`train.py` fine-tunes a multilingual transformer and writes `./saved_model/` with a serving signature that `model_loader.py` consumes directly.
+
+```bash
+# Full quality (needs a GPU or lots of RAM) — the default model is bert-base-multilingual-cased
+python train.py --csv data/train.csv --epochs 3 --batch-size 16
+```
+
+**Training mBERT in TensorFlow needs several GB of free RAM** (the PyTorch→TF weight conversion peaks high). On a low-RAM / no-GPU laptop, either train on Colab (below) or use the smaller distilled model and a subset:
+
+```bash
+python train.py --csv data/train.csv --model distilbert-base-multilingual-cased \
+  --subset 400 --batch-size 8 --epochs 1
+```
+
+`--model` accepts any HF sequence-classification model whose tokenizer matches `model_loader.TOKENIZER_NAME`; the export signature is model-agnostic, so `model_loader.py` needs no changes.
+
+### Train on Colab (free GPU) — recommended for quality
+
+Open [`notebooks/train_colab.ipynb`](notebooks/train_colab.ipynb) in Google Colab, set the runtime to **GPU**, run all cells, and download the resulting `saved_model.zip`. Unzip it into the repo root so `./saved_model/saved_model.pb` exists, then run the app/API below.
 
 ## Run locally
+
+> Requires a trained `./saved_model/` (see [Training](#training)).
 
 ### Gradio app
 
@@ -239,4 +287,4 @@ Released under the [MIT License](LICENSE). Free for commercial and personal use;
 ![Gradio](https://img.shields.io/badge/Gradio-4.7.1-F97316?logo=gradio&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.104-009688?logo=fastapi&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker&logoColor=white)
-![Python](https://img.shields.io/badge/Python-3.10-3776AB?logo=python&logoColor=white)
+![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=white)
