@@ -52,6 +52,9 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--lr", type=float, default=2e-5)
     p.add_argument("--subset", type=int, default=0,
                    help="cap total training rows (0 = use all)")
+    p.add_argument("--freeze-base", action="store_true",
+                   help="freeze the transformer body and train only the classifier "
+                        "head (much lower peak RAM; lower accuracy).")
     p.add_argument("--val-split", type=float, default=0.1)
     p.add_argument("--seed", type=int, default=42)
     return p.parse_args()
@@ -132,6 +135,17 @@ def main() -> None:
         model = TFAutoModelForSequenceClassification.from_pretrained(
             args.model, num_labels=NUM_LABELS, from_pt=True
         )
+
+    if args.freeze_base:
+        # Train only the classification head: the large transformer body stays
+        # frozen, so no gradients/optimizer slots are allocated for it. Cuts peak
+        # RAM dramatically on machines that can't hold full fine-tuning state.
+        frozen = 0
+        for layer in model.layers:
+            if layer.name != "classifier":
+                layer.trainable = False
+                frozen += 1
+        log(f"Froze {frozen} base layer(s); training the classifier head only.")
 
     texts = df["text"].astype(str).tolist()
     labels = df["label"].to_numpy(dtype=np.int32)
